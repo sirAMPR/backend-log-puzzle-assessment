@@ -19,6 +19,7 @@ import re
 import sys
 import urllib.request
 import argparse
+import collections
 
 
 def read_urls(filename):
@@ -26,8 +27,16 @@ def read_urls(filename):
     extracting the hostname from the filename itself, sorting
     alphabetically in increasing order, and screening out duplicates.
     """
-    # +++your code here+++
-    pass
+
+    with open(filename) as f:
+        server_name = re.search(r'code\S+', filename).group()
+        file_string = f.read()
+        keys = re.findall(r'/\S+-(\S+).jpg', file_string)
+        result = re.findall(r'\S+/puzzle/\S+', file_string)
+        matches = [f"http://{server_name}{match}" for match in result]
+        url_dict = dict(zip(keys, matches))
+        sorted_dict = collections.OrderedDict(sorted(url_dict.items()))
+    return sorted_dict.values()
 
 
 def download_images(img_urls, dest_dir):
@@ -38,8 +47,16 @@ def download_images(img_urls, dest_dir):
     to show each local image file.
     Creates the directory if necessary.
     """
-    # +++your code here+++
-    pass
+    os.makedirs(dest_dir, exist_ok=True)
+    with open("index.html", "w") as f:
+        f.write("<html>\n<body>\n")
+        os.chdir(dest_dir)
+        print('Retrieving...')
+        for i, url in enumerate(img_urls):
+            filename, headers = urllib.request.urlretrieve(
+                url, filename=f"img{i}")
+            f.write(f"<img src=\"{dest_dir}/{filename}\">")
+        f.write("\n</body>\n</html>")
 
 
 def create_parser():
@@ -47,7 +64,8 @@ def create_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--todir',
                         help='destination directory for downloaded images')
-    parser.add_argument('logfile', help='apache logfile to extract urls from')
+    parser.add_argument(
+        'logfile', help='apache logfile to extract urls from')
 
     return parser
 
