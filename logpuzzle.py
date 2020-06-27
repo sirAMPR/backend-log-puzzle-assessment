@@ -19,6 +19,7 @@ import re
 import sys
 import urllib.request
 import argparse
+import collections
 
 
 def read_urls(filename):
@@ -29,9 +30,13 @@ def read_urls(filename):
 
     with open(filename) as f:
         server_name = re.search(r'code\S+', filename).group()
-        result = re.findall(r'\S+/puzzle/\S+', f.read())
+        file_string = f.read()
+        keys = re.findall(r'/\S+-(\S+).jpg', file_string)
+        result = re.findall(r'\S+/puzzle/\S+', file_string)
         matches = [f"http://{server_name}{match}" for match in result]
-    return sorted(list(dict.fromkeys(matches)))
+        url_dict = dict(zip(keys, matches))
+        sorted_dict = collections.OrderedDict(sorted(url_dict.items()))
+    return sorted_dict.values()
 
 
 def download_images(img_urls, dest_dir):
